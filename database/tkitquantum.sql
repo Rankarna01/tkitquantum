@@ -1,26 +1,66 @@
 -- =====================================================================
--- ARAGI SCHOOL - Database Schema
+-- TK IT QUANTUM SCHOOL - Database Schema & Seed Data (Clean & Consolidated)
 -- Engine: MySQL 8+ / MariaDB 10.4+
--- Charset: utf8mb4
+-- Charset: utf8mb4 / utf8mb4_unicode_ci
 -- =====================================================================
 
+SET FOREIGN_KEY_CHECKS = 0;
 
+-- Drop tables if exists to allow clean re-import
+DROP TABLE IF EXISTS permainan_skor;
+DROP TABLE IF EXISTS permainan_game;
+DROP TABLE IF EXISTS permainan_pengaturan;
+DROP TABLE IF EXISTS berita_galeri;
+DROP TABLE IF EXISTS konten_islami;
+DROP TABLE IF EXISTS pesan_kontak;
+DROP TABLE IF EXISTS hero_slide;
+DROP TABLE IF EXISTS statistik_sekolah;
+DROP TABLE IF EXISTS statistik_kunjungan;
+DROP TABLE IF EXISTS ppdb_pendaftar;
+DROP TABLE IF EXISTS ppdb_faq;
+DROP TABLE IF EXISTS ppdb_pengaturan;
+DROP TABLE IF EXISTS testimoni_alumni;
+DROP TABLE IF EXISTS galeri_video;
+DROP TABLE IF EXISTS galeri_foto;
+DROP TABLE IF EXISTS galeri_kategori;
+DROP TABLE IF EXISTS agenda;
+DROP TABLE IF EXISTS pengumuman;
+DROP TABLE IF EXISTS berita;
+DROP TABLE IF EXISTS kategori_berita;
+DROP TABLE IF EXISTS fasilitas;
+DROP TABLE IF EXISTS ekstrakurikuler;
+DROP TABLE IF EXISTS prestasi;
+DROP TABLE IF EXISTS kalender_akademik;
+DROP TABLE IF EXISTS mata_pelajaran;
+DROP TABLE IF EXISTS tenaga_kependidikan;
+DROP TABLE IF EXISTS guru;
+DROP TABLE IF EXISTS struktur_organisasi;
+DROP TABLE IF EXISTS profil_sekolah;
+DROP TABLE IF EXISTS pengaturan_website;
+DROP TABLE IF EXISTS activity_logs;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS role_permissions;
+DROP TABLE IF EXISTS permissions;
+DROP TABLE IF EXISTS roles;
 
--- ============================
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- =====================================================================
 -- 1. USERS & RBAC
--- ============================
+-- =====================================================================
+
 CREATE TABLE roles (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nama_role VARCHAR(50) NOT NULL UNIQUE,   -- superadmin, admin, operator, guru, tendik
     deskripsi VARCHAR(255) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE permissions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     kode VARCHAR(100) NOT NULL UNIQUE,       -- e.g. berita.create, ppdb.manage
     deskripsi VARCHAR(255) NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE role_permissions (
     role_id INT NOT NULL,
@@ -28,7 +68,7 @@ CREATE TABLE role_permissions (
     PRIMARY KEY (role_id, permission_id),
     FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE,
     FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -46,7 +86,7 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (role_id) REFERENCES roles(id)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE activity_logs (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -57,11 +97,12 @@ CREATE TABLE activity_logs (
     user_agent VARCHAR(255) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ============================
+-- =====================================================================
 -- 2. PENGATURAN & BRANDING
--- ============================
+-- =====================================================================
+
 CREATE TABLE pengaturan_website (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nama_sekolah VARCHAR(150) NOT NULL DEFAULT 'TK IT Quantum School',
@@ -84,19 +125,22 @@ CREATE TABLE pengaturan_website (
     youtube VARCHAR(255) NULL,
     tiktok VARCHAR(255) NULL,
     maps_embed TEXT NULL,
+    musik_latar VARCHAR(255) NULL,
+    musik_aktif ENUM('ya','tidak') NOT NULL DEFAULT 'tidak',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE profil_sekolah (
     id INT AUTO_INCREMENT PRIMARY KEY,
     sejarah TEXT NULL,
+    foto_sejarah VARCHAR(255) NULL,
     visi TEXT NULL,
     misi TEXT NULL,
     tujuan TEXT NULL,
     sambutan_kepsek TEXT NULL,
     nama_kepsek VARCHAR(150) NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE struktur_organisasi (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -106,11 +150,29 @@ CREATE TABLE struktur_organisasi (
     urutan INT DEFAULT 0,
     parent_id INT NULL,
     FOREIGN KEY (parent_id) REFERENCES struktur_organisasi(id) ON DELETE SET NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ============================
+CREATE TABLE hero_slide (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    gambar VARCHAR(255) NOT NULL,
+    judul VARCHAR(200) NULL,
+    urutan INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE konten_islami (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    teks VARCHAR(500) NOT NULL,
+    sumber VARCHAR(150) NULL,
+    status ENUM('aktif','nonaktif') DEFAULT 'aktif',
+    urutan INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- =====================================================================
 -- 3. GURU & TENAGA KEPENDIDIKAN
--- ============================
+-- =====================================================================
+
 CREATE TABLE guru (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NULL,
@@ -126,7 +188,7 @@ CREATE TABLE guru (
     status ENUM('aktif','nonaktif') DEFAULT 'aktif',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE tenaga_kependidikan (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -142,17 +204,18 @@ CREATE TABLE tenaga_kependidikan (
     status ENUM('aktif','nonaktif') DEFAULT 'aktif',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ============================
+-- =====================================================================
 -- 4. AKADEMIK
--- ============================
+-- =====================================================================
+
 CREATE TABLE mata_pelajaran (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nama_mapel VARCHAR(150) NOT NULL,
     kode VARCHAR(20) NULL,
     deskripsi TEXT NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE kalender_akademik (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -160,7 +223,7 @@ CREATE TABLE kalender_akademik (
     tanggal_mulai DATE NOT NULL,
     tanggal_selesai DATE NULL,
     keterangan TEXT NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE prestasi (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -171,7 +234,7 @@ CREATE TABLE prestasi (
     foto VARCHAR(255) NULL,
     deskripsi TEXT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE ekstrakurikuler (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -180,23 +243,24 @@ CREATE TABLE ekstrakurikuler (
     foto VARCHAR(255) NULL,
     deskripsi TEXT NULL,
     jadwal VARCHAR(150) NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE fasilitas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nama VARCHAR(150) NOT NULL,
     foto VARCHAR(255) NULL,
     deskripsi TEXT NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ============================
--- 5. CMS: BERITA, PENGUMUMAN, AGENDA, GALERI
--- ============================
+-- =====================================================================
+-- 5. CMS: BERITA, PENGUMUMAN, AGENDA, GALERI & TESTIMONI
+-- =====================================================================
+
 CREATE TABLE kategori_berita (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nama_kategori VARCHAR(100) NOT NULL,
     slug VARCHAR(120) NOT NULL UNIQUE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE berita (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -214,7 +278,16 @@ CREATE TABLE berita (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (kategori_id) REFERENCES kategori_berita(id) ON DELETE SET NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE berita_galeri (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    berita_id INT NOT NULL,
+    file VARCHAR(255) NOT NULL,
+    urutan INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (berita_id) REFERENCES berita(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE pengumuman (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -228,7 +301,7 @@ CREATE TABLE pengumuman (
     tanggal_publish DATETIME NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE agenda (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -238,12 +311,12 @@ CREATE TABLE agenda (
     lokasi VARCHAR(200) NULL,
     deskripsi TEXT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE galeri_kategori (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nama_kategori VARCHAR(100) NOT NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE galeri_foto (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -252,15 +325,16 @@ CREATE TABLE galeri_foto (
     file VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (kategori_id) REFERENCES galeri_kategori(id) ON DELETE SET NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE galeri_video (
     id INT AUTO_INCREMENT PRIMARY KEY,
     judul VARCHAR(200) NOT NULL,
     url_youtube VARCHAR(255) NOT NULL,
+    platform VARCHAR(30) NOT NULL DEFAULT 'YouTube',
     thumbnail VARCHAR(255) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE testimoni_alumni (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -271,11 +345,12 @@ CREATE TABLE testimoni_alumni (
     isi_testimoni TEXT NOT NULL,
     status ENUM('draft','publish') DEFAULT 'publish',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ============================
+-- =====================================================================
 -- 6. PPDB (Penerimaan Peserta Didik Baru)
--- ============================
+-- =====================================================================
+
 CREATE TABLE ppdb_pengaturan (
     id INT AUTO_INCREMENT PRIMARY KEY,
     tahun_ajaran VARCHAR(20) NOT NULL,
@@ -284,19 +359,27 @@ CREATE TABLE ppdb_pengaturan (
     tanggal_mulai DATE NULL,
     tanggal_selesai DATE NULL,
     biaya_pendaftaran DECIMAL(10,2) DEFAULT 0,
+    banner VARCHAR(255) NULL,
+    promo_nama VARCHAR(150) NULL,
+    promo_potongan DECIMAL(10,2) NULL DEFAULT 0,
+    promo_mulai DATE NULL,
+    promo_selesai DATE NULL,
+    tampil_beranda ENUM('ya','tidak') NOT NULL DEFAULT 'ya',
+    cta_judul VARCHAR(200) NULL,
+    cta_subjudul VARCHAR(255) NULL,
     informasi TEXT NULL,
     persyaratan TEXT NULL,
     alur_pendaftaran TEXT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE ppdb_faq (
     id INT AUTO_INCREMENT PRIMARY KEY,
     pertanyaan VARCHAR(255) NOT NULL,
     jawaban TEXT NOT NULL,
     urutan INT DEFAULT 0
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE ppdb_pendaftar (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -325,11 +408,12 @@ CREATE TABLE ppdb_pendaftar (
     catatan_admin TEXT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (ppdb_id) REFERENCES ppdb_pengaturan(id) ON DELETE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ============================
--- 7. STATISTIK & PENGUNJUNG
--- ============================
+-- =====================================================================
+-- 7. STATISTIK & PENGUNJUNG & KONTAK
+-- =====================================================================
+
 CREATE TABLE statistik_kunjungan (
     id INT AUTO_INCREMENT PRIMARY KEY,
     ip_address VARCHAR(45) NULL,
@@ -337,7 +421,7 @@ CREATE TABLE statistik_kunjungan (
     user_agent VARCHAR(255) NULL,
     tanggal DATE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE statistik_sekolah (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -347,23 +431,50 @@ CREATE TABLE statistik_sekolah (
     total_ekskul INT DEFAULT 0,
     total_prestasi INT DEFAULT 0,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ============================
--- 8. KONTAK
--- ============================
 CREATE TABLE pesan_kontak (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nama VARCHAR(150) NOT NULL,
-    email VARCHAR(100) NOT NULL,
-    subjek VARCHAR(200) NULL,
+    email VARCHAR(150) NOT NULL,
+    no_hp VARCHAR(30) NULL,
     pesan TEXT NOT NULL,
     status ENUM('baru','dibaca') DEFAULT 'baru',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- =====================================================================
--- SEED DATA
+-- 8. ZONA PERMAINAN ANAK
+-- =====================================================================
+
+CREATE TABLE permainan_pengaturan (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    tampil_menu ENUM('ya','tidak') NOT NULL DEFAULT 'ya',
+    musik_game VARCHAR(255) NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE permainan_game (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    slug VARCHAR(50) NOT NULL UNIQUE,
+    nama VARCHAR(100) NOT NULL,
+    ikon VARCHAR(10) NULL,
+    deskripsi VARCHAR(255) NULL,
+    status ENUM('aktif','nonaktif') NOT NULL DEFAULT 'aktif',
+    urutan INT DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE permainan_skor (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    game_slug VARCHAR(50) NOT NULL,
+    nama_pemain VARCHAR(50) NOT NULL,
+    skor INT NOT NULL DEFAULT 0,
+    detail VARCHAR(100) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- =====================================================================
+-- SEED DATA (DATA AWAL LENGKAP)
 -- =====================================================================
 
 INSERT INTO roles (nama_role, deskripsi) VALUES
@@ -373,16 +484,16 @@ INSERT INTO roles (nama_role, deskripsi) VALUES
 ('guru', 'Akun guru'),
 ('tendik', 'Akun tenaga kependidikan');
 
--- Password default untuk KEDUA akun di bawah: Aragi@2026
--- (Ganti password ini segera setelah login pertama kali via menu "Ganti Password")
+-- Password default akun: Aragi@2026
+-- (Ganti password segera setelah login via menu Profil / Pengaturan Akun)
 INSERT INTO users (role_id, username, email, password, nama_lengkap, status) VALUES
 (1, 'superadmin', 'superadmin@tkitquantum.sch.id', '$2b$10$qHacySZLhDMdo5NdvqMc3emdnEIJnYmydv0TeT7nTm7tMfwmFCiga', 'Super Administrator', 'aktif'),
 (2, 'admin', 'admin@tkitquantum.sch.id', '$2b$10$qHacySZLhDMdo5NdvqMc3emdnEIJnYmydv0TeT7nTm7tMfwmFCiga', 'Admin Sekolah', 'aktif');
 
-INSERT INTO pengaturan_website (nama_sekolah, tagline, alamat, email, telepon, warna_primary, warna_secondary, warna_accent, instagram) VALUES
+INSERT INTO pengaturan_website (nama_sekolah, tagline, alamat, email, telepon, warna_primary, warna_secondary, warna_accent, instagram, musik_aktif) VALUES
 ('TK IT Quantum School', 'Bahagia Bermain, Bahagia Belajar, Bahagia Bertumbuh Bersama Si Kecil!',
 'Jl. Sei Mencirim No. 1, Kampung Lalang, Desa Medan Krio, Kec. Sunggal, Kab. Deli Serdang, Sumatera Utara 20351',
-'yudha.quantum2014@gmail.com', '0813-xxxx-xxxx', '#4FC3F7', '#FFF9E5', '#FF6FA5', 'https://www.instagram.com/tkitquantum.school/');
+'yudha.quantum2014@gmail.com', '0813-xxxx-xxxx', '#4FC3F7', '#FFF9E5', '#FF6FA5', 'https://www.instagram.com/tkitquantum.school/', 'tidak');
 
 INSERT INTO profil_sekolah (sejarah, visi, misi, tujuan, sambutan_kepsek, nama_kepsek) VALUES
 ('TK IT Quantum School berada di bawah naungan Yayasan Pendidikan Quantum School, berlokasi di Jl. Sei Mencirim No. 1, Medan Krio, Kecamatan Sunggal, Kabupaten Deli Serdang. Sekolah ini hadir sebagai taman kanak-kanak Islam Terpadu yang memadukan pembelajaran akademik, keagamaan, dan pembentukan karakter sejak usia dini melalui suasana belajar yang ceria, aman, dan menyenangkan.',
@@ -394,8 +505,8 @@ INSERT INTO profil_sekolah (sejarah, visi, misi, tujuan, sambutan_kepsek, nama_k
 INSERT INTO statistik_sekolah (total_siswa, total_guru, total_tendik, total_ekskul, total_prestasi) VALUES
 (120, 12, 6, 5, 16);
 
-INSERT INTO ppdb_pengaturan (tahun_ajaran, status, kuota, tanggal_mulai, tanggal_selesai, informasi, persyaratan, alur_pendaftaran) VALUES
-('2026/2027', 'aktif', 80, '2026-06-01', '2026-08-31',
+INSERT INTO ppdb_pengaturan (tahun_ajaran, status, kuota, tanggal_mulai, tanggal_selesai, tampil_beranda, informasi, persyaratan, alur_pendaftaran) VALUES
+('2026/2027', 'aktif', 80, '2026-06-01', '2026-08-31', 'ya',
  'Pendaftaran Peserta Didik Baru TK IT Quantum School Tahun Ajaran 2026/2027 resmi dibuka. Yuk, daftarkan si kecil untuk tumbuh bersama kami!',
  '- Fotokopi Kartu Keluarga\n- Fotokopi Akta Kelahiran\n- Pas Foto berwarna anak ukuran 3x4\n- Fotokopi Kartu Imunisasi/KIA\n- Usia sesuai ketentuan jenjang (Play Group/TK A/TK B)',
  '1. Isi formulir pendaftaran online melalui website\n2. Unggah seluruh dokumen persyaratan\n3. Simpan nomor pendaftaran yang diberikan sistem\n4. Tunggu proses verifikasi oleh panitia PPDB\n5. Cek status kelulusan melalui menu "Cek Status Pendaftaran"');
@@ -436,7 +547,8 @@ INSERT INTO agenda (judul, tanggal_mulai, tanggal_selesai, lokasi, deskripsi) VA
 ('Rapat Orang Tua Wali Murid', DATE_ADD(NOW(), INTERVAL 14 DAY), NULL, 'Aula TK IT Quantum School', 'Pembahasan program semester baru bersama wali murid.'),
 ('Pentas Seni Akhir Tahun', DATE_ADD(NOW(), INTERVAL 30 DAY), NULL, 'Lapangan Sekolah', 'Pentas seni menampilkan kreativitas siswa di berbagai bidang.');
 
-INSERT INTO galeri_kategori (nama_kategori) VALUES ('Kegiatan Belajar'), ('Ekstrakurikuler'), ('Fasilitas Sekolah'), ('Acara Sekolah');
+INSERT INTO galeri_kategori (nama_kategori) VALUES
+('Kegiatan Belajar'), ('Ekstrakurikuler'), ('Fasilitas Sekolah'), ('Acara Sekolah'), ('Lingkungan Sekolah');
 
 INSERT INTO guru (nip, nama_lengkap, mata_pelajaran, pendidikan_terakhir, jabatan, email, no_hp, riwayat_singkat, status) VALUES
 ('198501012010011001', 'Dr. Budi Santoso, M.Pd.', 'Matematika', 'S3 Pendidikan Matematika', 'Kepala Sekolah', 'budi.santoso@tkitquantum.sch.id', '081234567001', 'Berpengalaman mengajar matematika lebih dari 15 tahun.', 'aktif'),
@@ -501,157 +613,23 @@ INSERT INTO mata_pelajaran (nama_mapel, kode, deskripsi) VALUES
 ('Informatika', 'INF', 'Mata pelajaran literasi digital dan dasar-dasar pemrograman.'),
 ('Pendidikan Jasmani, Olahraga, dan Kesehatan', 'PJOK', 'Mata pelajaran untuk kebugaran jasmani dan pola hidup sehat.');
 
--- ============================
--- 8. UPDATE TAMBAHAN (fitur galeri video multi-platform, PPDB banner & promo, kategori lingkungan)
--- ============================
-ALTER TABLE galeri_video
-  ADD COLUMN platform VARCHAR(30) NOT NULL DEFAULT 'YouTube' AFTER url_youtube;
-
-ALTER TABLE ppdb_pengaturan
-  ADD COLUMN banner VARCHAR(255) NULL AFTER biaya_pendaftaran,
-  ADD COLUMN promo_nama VARCHAR(150) NULL AFTER banner,
-  ADD COLUMN promo_potongan DECIMAL(10,2) NULL DEFAULT 0 AFTER promo_nama,
-  ADD COLUMN promo_mulai DATE NULL AFTER promo_potongan,
-  ADD COLUMN promo_selesai DATE NULL AFTER promo_mulai;
-
-INSERT INTO galeri_kategori (nama_kategori) VALUES ('Lingkungan Sekolah');
-
--- ============================
--- 9. HERO SLIDE (banner landing page yang bisa diunggah admin)
--- ============================
-CREATE TABLE hero_slide (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    gambar VARCHAR(255) NOT NULL,
-    judul VARCHAR(200) NULL,
-    urutan INT DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
-
--- ============================
--- 10. PESAN KONTAK (form tanya-jawab dari orang tua/pengunjung)
--- ============================
-CREATE TABLE pesan_kontak (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nama VARCHAR(150) NOT NULL,
-    email VARCHAR(150) NOT NULL,
-    no_hp VARCHAR(30) NULL,
-    pesan TEXT NOT NULL,
-    status ENUM('baru','dibaca') DEFAULT 'baru',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
-
--- ============================
--- 11. KONTEN ISLAMI BERJALAN (running text: ayat/hadits/kata mutiara di beranda)
--- ============================
-CREATE TABLE konten_islami (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    teks VARCHAR(500) NOT NULL,
-    sumber VARCHAR(150) NULL,
-    status ENUM('aktif','nonaktif') DEFAULT 'aktif',
-    urutan INT DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
-
 INSERT INTO konten_islami (teks, sumber, status, urutan) VALUES
 ('Sebaik-baik kalian adalah yang paling baik akhlaknya.', 'HR. Bukhari', 'aktif', 1),
 ('Didiklah anak-anakmu karena mereka diciptakan untuk zaman yang berbeda denganmu.', 'Umar bin Khattab', 'aktif', 2),
 ('Rabbi zidni ilma — Ya Tuhanku, tambahkanlah ilmu kepadaku.', 'QS. Thaha: 114', 'aktif', 3);
 
--- ============================
--- 12. FOTO SEJARAH SEKOLAH (ditampilkan di samping teks Sejarah pada halaman Profil)
--- ============================
-ALTER TABLE profil_sekolah
-  ADD COLUMN foto_sejarah VARCHAR(255) NULL AFTER sejarah;
-
--- ============================
--- 13. THUMBNAIL VIDEO (untuk video dari platform selain YouTube yang tidak auto-embed)
--- ============================
-ALTER TABLE galeri_video
-  ADD COLUMN thumbnail VARCHAR(255) NULL AFTER platform;
-
--- ============================
--- 14. TOGGLE TAMPIL DI BERANDA + TEKS CTA PROMOSI PPDB
--- ============================
-ALTER TABLE ppdb_pengaturan
-  ADD COLUMN tampil_beranda ENUM('ya','tidak') NOT NULL DEFAULT 'ya',
-  ADD COLUMN cta_judul VARCHAR(200) NULL,
-  ADD COLUMN cta_subjudul VARCHAR(255) NULL;
-
--- ============================
--- 15. MUSIK LATAR (diputar otomatis saat website dibuka, diatur admin)
--- ============================
-ALTER TABLE pengaturan_website
-  ADD COLUMN musik_latar VARCHAR(255) NULL,
-  ADD COLUMN musik_aktif ENUM('ya','tidak') NOT NULL DEFAULT 'tidak';
-
--- ============================
--- 16. GALERI FOTO TAMBAHAN PER BERITA (jadi slide hero jika >1 foto)
--- ============================
-CREATE TABLE berita_galeri (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    berita_id INT NOT NULL,
-    file VARCHAR(255) NOT NULL,
-    urutan INT DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (berita_id) REFERENCES berita(id) ON DELETE CASCADE
-) ENGINE=InnoDB;
-
--- ============================
--- 17. PERMAINAN (mini game anak-anak + pengaturan tampil/hide + leaderboard)
--- ============================
-CREATE TABLE permainan_pengaturan (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    tampil_menu ENUM('ya','tidak') NOT NULL DEFAULT 'ya'
-) ENGINE=InnoDB;
 INSERT INTO permainan_pengaturan (tampil_menu) VALUES ('ya');
-
-CREATE TABLE permainan_game (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    slug VARCHAR(50) NOT NULL UNIQUE,
-    nama VARCHAR(100) NOT NULL,
-    ikon VARCHAR(10) NULL,
-    deskripsi VARCHAR(255) NULL,
-    status ENUM('aktif','nonaktif') NOT NULL DEFAULT 'aktif',
-    urutan INT DEFAULT 0
-) ENGINE=InnoDB;
 
 INSERT INTO permainan_game (slug, nama, ikon, deskripsi, status, urutan) VALUES
 ('cocok-kartu', 'Cocokkan Kartunya', '🐬', 'Latih ingatan dengan mencocokkan kartu bergambar', 'aktif', 1),
 ('tangkap-bintang', 'Tangkap Bintang', '⭐', 'Klik bintang secepat mungkin sebelum menghilang', 'aktif', 2),
-('puzzle-angka', 'Puzzle Angka', '🔢', 'Susun ulang angka 1-8 dengan langkah sesedikit mungkin', 'aktif', 3);
-
-CREATE TABLE permainan_skor (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    game_slug VARCHAR(50) NOT NULL,
-    nama_pemain VARCHAR(50) NOT NULL,
-    skor INT NOT NULL DEFAULT 0,
-    detail VARCHAR(100) NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
-
--- ============================
--- 18. TAMBAHAN 6 GAME BARU DI ZONA PERMAINAN
--- ============================
-INSERT INTO permainan_game (slug, nama, ikon, deskripsi, status, urutan) VALUES
+('puzzle-angka', 'Puzzle Angka', '🔢', 'Susun ulang angka 1-8 dengan langkah sesedikit mungkin', 'aktif', 3),
 ('tebak-angka', 'Tebak Angka', '🎯', 'Tebak angka rahasia 1-100 dengan petunjuk lebih besar/kecil', 'aktif', 4),
 ('ketuk-warna', 'Ketuk Warna', '🎨', 'Ingat & ulangi urutan warna yang menyala, makin lama makin panjang!', 'aktif', 5),
 ('hitung-cepat', 'Hitung Cepat', '➕', 'Jawab soal tambah & kurang sebanyak mungkin dalam 60 detik', 'aktif', 6),
 ('tebak-kata', 'Tebak Kata', '🔤', 'Tebak huruf untuk menemukan kata tersembunyi', 'aktif', 7),
 ('uji-reaksi', 'Uji Reaksi', '⚡', 'Klik secepat mungkin begitu warna berubah hijau', 'aktif', 8),
-('balap-ketik', 'Balap Ketik', '⌨️', 'Ketik kata yang muncul secepat & setepat mungkin dalam 30 detik', 'aktif', 9);
-
--- ============================
--- 19. MUSIK LATAR KHUSUS GAME (berlaku untuk semua game di Zona Permainan)
--- ============================
-ALTER TABLE permainan_pengaturan
-  ADD COLUMN musik_game VARCHAR(255) NULL;
-
-UPDATE permainan_game SET ikon = '🎯' WHERE slug = 'tebak-angka';
-
--- ============================
--- 20. TAMBAHAN 6 GAME INTERAKTIF BARU
--- ============================
-INSERT INTO permainan_game (slug, nama, ikon, deskripsi, status, urutan) VALUES
+('balap-ketik', 'Balap Ketik', '⌨️', 'Ketik kata yang muncul secepat & setepat mungkin dalam 30 detik', 'aktif', 9),
 ('tebak-silang', 'Tebak Silang', '❌', 'Main tic-tac-toe (X-O) melawan komputer', 'aktif', 10),
 ('tebak-emoji', 'Tebak Emoji', '😄', 'Tebak kata dari rangkaian emoji yang ditampilkan', 'aktif', 11),
 ('klik-bentuk', 'Klik Bentuk Sama', '🔺', 'Klik bentuk yang sesuai target secepat mungkin', 'aktif', 12),
